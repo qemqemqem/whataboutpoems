@@ -34,6 +34,7 @@ def calculate_likelihoods(poem, model, tokenizer):
             outputs = model(inputs)
             next_token_probs = torch.softmax(outputs.logits[0, -1], dim=-1)
             correct_token_prob = next_token_probs[poem.tokens[i]].item()
+            console.print(f"Computing Likelihood. Context: {context}, Next Token: {tokenizer.decode([poem.tokens[i]])}, Probability: {correct_token_prob}")
             poem.likelihoods.append(correct_token_prob)
 
 def display_colored_tokens(poem, tokenizer):
@@ -60,7 +61,7 @@ def main():
     # console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
-    poems_with_attribution = loader.get_random_poems(3)
+    poems_with_attribution = loader.get_random_poems(1)
     poems = [Poem(author, title, " ".join(poem[:300].split())) for author, title, poem in poems_with_attribution]
     poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
     poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
