@@ -14,6 +14,9 @@ from poem_loader import PoemLoader
 
 console = rich.console.Console()
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 class Poem:
     def __init__(self, author, title, text):
         self.author = author
@@ -28,14 +31,15 @@ def tokenize(poem, tokenizer):
 def calculate_likelihoods(poem, model, tokenizer):
     model.eval()
     poem.likelihoods = []
+    model.to(device)
+    poem.tokens = torch.tensor(poem.tokens).to(device)
+    
     with torch.no_grad():
         for i in range(1, len(poem.tokens)):
-            context = poem.tokens[:i]
-            inputs = torch.tensor(context).unsqueeze(0)
-            outputs = model(inputs)
+            context = poem.tokens[:i].unsqueeze(0)
+            outputs = model(context)
             next_token_probs = torch.softmax(outputs.logits[0, -1], dim=-1)
             correct_token_prob = next_token_probs[poem.tokens[i]].item()
-            # console.print(f"Computing Likelihood. Context: {context}, Next Token: {tokenizer.decode([poem.tokens[i]])}, Probability: {correct_token_prob}")
             poem.likelihoods.append(correct_token_prob)
 
 def display_colored_tokens(poem, tokenizer):
