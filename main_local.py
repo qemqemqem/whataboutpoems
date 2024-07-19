@@ -66,10 +66,13 @@ def main():
     tokenized_poems = tokenize_poems(poems, tokenizer)
 
     # Calculate token likelihoods
-    console.print(Markdown("# Downloading Poems"))
+    console.print(Markdown("# Calculating Token Likelihoods"))
     likelihoods = calculate_likelihoods(tokenized_poems, model, tokenizer)
-    print(likelihoods)
-
+    
+    for poem, poem_likelihoods in zip(tokenized_poems, likelihoods):
+        for token, likelihood in zip(poem, poem_likelihoods):
+            token_text = tokenizer.decode([token])
+            console.print(f"Likelihood: {likelihood:.4f}: `{token_text}`")
     # Sort poems based on average correctness
     console.print(Markdown("# Sorting"))
     sorted_poems = sort_poems(poems, likelihoods)
