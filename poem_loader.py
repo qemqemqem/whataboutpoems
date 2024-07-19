@@ -14,7 +14,7 @@ class PoemLoader:
         with self.filepath.open('r', encoding='utf-8') as file:
             self.poems = [json.loads(line) for line in file]
             # Remove empty poems
-            self.poems = [poem for poem in self.poems if poem['poem'].strip()]
+            self.poems = [poem for poem in self.poems if len(poem['poem'].strip()) > 100]
 
     def get_random_poems(self, count: int = 2) -> List[Dict[str, Any]]:
         return [(poem['author'], poem['title'], poem['poem']) for poem in random.sample(self.poems, count)]

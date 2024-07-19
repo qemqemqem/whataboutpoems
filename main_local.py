@@ -3,7 +3,7 @@ import argparse
 
 import requests
 from bs4 import BeautifulSoup
-from transformers import GPTNeoForCausalLM, GPT2Tokenizer
+from transformers import GPTNeoForCausalLM, GPT2Tokenizer, GPT2LMHeadModel, GPT2TokenizerFast
 import torch
 import rich
 from rich.progress import track
@@ -66,7 +66,7 @@ def main():
     # console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
-    poems_with_attribution = loader.get_random_poems(3)
+    poems_with_attribution = loader.get_random_poems(8)
     poems = [Poem(author, title, " ".join(poem[:150].split())) for author, title, poem in poems_with_attribution]
     poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
     poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
@@ -75,9 +75,9 @@ def main():
     # console.print(Markdown("# Initializing Tokenizer and Model"))
     if args.model == 'gpt2':
         tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-        model = GPTNeoForCausalLM.from_pretrained('gpt2')
+        model = GPT2LMHeadModel.from_pretrained('gpt2')
     else:
-        tokenizer = GPT2Tokenizer.from_pretrained('EleutherAI/gpt-neo-2.7B')
+        tokenizer = GPT2TokenizerFast.from_pretrained('EleutherAI/gpt-neo-2.7B')
         model = GPTNeoForCausalLM.from_pretrained('EleutherAI/gpt-neo-2.7B')
 
     # Tokenize poems
