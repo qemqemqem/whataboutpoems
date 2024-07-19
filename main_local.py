@@ -57,19 +57,21 @@ def print_details(poem, tokenizer):
 # Main function
 def main():
     # Download poems
-    console.print(Markdown("# Downloading Poems"))
+    # console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
     poems_with_attribution = loader.get_random_poems(3)
-    poems = [Poem(author, title, " ".join(poem[:100].split())) for author, title, poem in poems_with_attribution]
+    poems = [Poem(author, title, " ".join(poem[:300].split())) for author, title, poem in poems_with_attribution]
+    poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
+    poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
 
     # Initialize tokenizer and model
-    console.print(Markdown("# Initializing Tokenizer and Model"))
+    # console.print(Markdown("# Initializing Tokenizer and Model"))
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     model = GPT2LMHeadModel.from_pretrained('gpt2')
 
     # Tokenize poems
-    console.print(Markdown("# Tokenizing Poems"))
+    # console.print(Markdown("# Tokenizing Poems"))
     for poem in poems:
         tokenize(poem, tokenizer)
 
