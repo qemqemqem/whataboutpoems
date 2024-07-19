@@ -47,9 +47,10 @@ def display_colored_tokens(poem, tokenizer):
         console.print(text, end='')
     console.print()  # Newline after printing all tokens
 
-def print_details(poem):
+def print_details(poem, tokenizer):
     console.print(Markdown(f"## {poem.title} by {poem.author}"))
     console.print(f"[blue]Text: {poem.text[:100]}...[/blue]")
+    display_colored_tokens(poem, tokenizer)
     if poem.likelihoods:
         avg_likelihood = sum(poem.likelihoods) / len(poem.likelihoods)
         console.print(f"[bold green]Average Likelihood: {avg_likelihood:.4f}[/bold green]")
@@ -86,7 +87,7 @@ def main():
     # Print sorted results
     console.print(Markdown("# Sorted Poems Based on Average Token Likelihood"))
     for poem in sorted_poems:
-        print_details(poem)
+        print_details(poem, tokenizer)
 
 if __name__ == "__main__":
     main()
