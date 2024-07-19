@@ -1,7 +1,7 @@
 import json
 import random
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 
 class PoemLoader:
@@ -18,6 +18,9 @@ class PoemLoader:
 
     def get_random_poems(self, count: int = 2) -> List[Dict[str, Any]]:
         return random.sample(self.poems, count)
+
+    def get_all_poems(self) -> List[Tuple[str, str, str]]:
+        return [(poem['author'], poem['title'], poem['poem']) for poem in self.poems]
 
 
 if __name__ == "__main__":

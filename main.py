@@ -1,38 +1,38 @@
 import os
+from pathlib import Path
 
 import requests
+import rich
 from bs4 import BeautifulSoup
-import openai
-from rich import print
+# import openai
+# from openai import OpenAI
+import rich
 from rich.progress import track
+import anthropic
+from tqdm import tqdm
 
-# Set your OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from poem_loader import PoemLoader
 
-# Step 1: Download 100 poems
-def download_poems():
-    print("[bold green]Downloading poems...[/bold green]")
-    poems = []
-    base_url = "https://www.gutenberg.org/files/"
+# client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-    for i in range(100):
-        url = f"{base_url}{i+1}/{i+1}-0.txt"
-        response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            text = soup.get_text()
-            poems.append(text)
-            print(f"[green]Downloaded poem {i+1}[/green]")
-        else:
-            print(f"[red]Failed to download poem {i+1}[/red]")
-
-    return poems
+# Create a rich console
+console = rich.console.Console()
 
 # Step 2: Tokenize poems
 def tokenize_poems(poems):
     print("[bold green]Tokenizing poems...[/bold green]")
     # Use OpenAI's tokenizer
-    tokenized_poems = [openai.Completion.create(engine="text-davinci-003", prompt=poem, max_tokens=0).choices[0].text.split() for poem in track(poems, description="Tokenizing...")]
+    tokenized_poems = []
+    for poem in tqdm(poems, desc="Tokenizing..."):
+        response = client.completions.create(model="claude-3-5-sonnet-20240620", max_tokens_to_sample=0, prompt=poem)
+        # response = client.completions.create(
+        #     model="gpt-3.5-turbo-instruct",
+        #     prompt=poem,
+        #     max_tokens=0
+        # )
+        tokenized_poems.append(response.choices[0].text.split())
+    # tokenized_poems = [client.completions.create(model="gpt-4o-mini", prompt=poem, max_tokens=0).choices[0].text.split() for poem in track(poems, description="Tokenizing...")]
     return tokenized_poems
 
 # Step 3: Predict next token and calculate likelihood
@@ -44,11 +44,11 @@ def calculate_likelihoods(tokenized_poems):
         poem_likelihoods = []
         for i in range(1, len(poem)):
             context = ' '.join(poem[:i])
-            response = openai.Completion.create(
-                engine="text-davinci-003",
+            response = client.completions.create(
+                model="gpt-4o",
                 prompt=context,
                 max_tokens=1,
-                logprobs=1
+                # logprobs=1
             )
             next_token = poem[i]
             next_token_prob = response['choices'][0]['logprobs']['top_logprobs'][0].get(next_token, float('-inf'))
@@ -66,7 +66,10 @@ def sort_poems(poems, likelihoods):
 # Main function
 def main():
     # Download poems
-    poems = download_poems()
+    filepath = Path("poems.jsonl")
+    loader = PoemLoader(filepath)
+    poems_with_attribution = loader.get_all_poems()  # List of (author, title, poem) tuples
+    poems = [poem for _, _, poem in poems_with_attribution]
 
     # Tokenize poems
     tokenized_poems = tokenize_poems(poems)
