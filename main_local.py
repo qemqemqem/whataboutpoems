@@ -7,6 +7,7 @@ import torch
 import rich
 from rich.progress import track
 from rich.markdown import Markdown
+from rich.text import Text
 
 from poem_loader import PoemLoader
 
@@ -45,6 +46,18 @@ def sort_poems(poems, likelihoods):
     sorted_poems = sorted(zip(poems, avg_likelihoods), key=lambda x: x[1], reverse=True)
     return sorted_poems
 
+def display_colored_tokens(token_texts, likelihoods):
+    for token_text, likelihood in zip(token_texts, likelihoods):
+        # Calculate color based on likelihood
+        red = int((1 - likelihood) * 255)
+        green = int(likelihood * 255)
+        color = f"#{red:02x}{green:02x}00"
+        
+        # Create a Text object with the background color
+        text = Text(token_text, style=f"on {color}")
+        console.print(text, end='')
+    console.print()  # Newline after printing all tokens
+
 # Main function
 def main():
     # Download poems
@@ -70,9 +83,9 @@ def main():
     likelihoods = calculate_likelihoods(tokenized_poems, model, tokenizer)
     
     for poem, poem_likelihoods in zip(tokenized_poems, likelihoods):
-        for token, likelihood in zip(poem, poem_likelihoods):
-            token_text = tokenizer.decode([token])
-            console.print(f"Likelihood: {likelihood:.4f}: `{token_text}`")
+        token_texts = [tokenizer.decode([token]) for token in poem]
+        display_colored_tokens(token_texts, poem_likelihoods)
+
     # Sort poems based on average correctness
     console.print(Markdown("# Sorting"))
     sorted_poems = sort_poems(poems, likelihoods)
