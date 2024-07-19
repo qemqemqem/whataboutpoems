@@ -48,7 +48,7 @@ def display_colored_tokens(poem, tokenizer):
         red = int((1 - likelihood) * 255)
         green = int(likelihood * 255)
         color = f"#{red:02x}{green:02x}00"
-        text = Text(token_text, style=f"on {color}")
+        text = Text(token_text, style=f"black on {color}")  # Set text color to black
         console.print(text, end='')
     console.print()  # Newline after printing all tokens
 
