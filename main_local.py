@@ -11,52 +11,48 @@ from rich.text import Text
 
 from poem_loader import PoemLoader
 
-
 console = rich.console.Console()
 
-# Step 2: Tokenize poems
-def tokenize_poems(poems, tokenizer):
-    console.print("[bold green]Tokenizing poems...[/bold green]")
-    tokenized_poems = [tokenizer.encode(poem) for poem in track(poems, description="Tokenizing...")]
-    return tokenized_poems
+class Poem:
+    def __init__(self, author, title, text):
+        self.author = author
+        self.title = title
+        self.text = text
+        self.tokens = None
+        self.likelihoods = None
 
-# Step 3: Predict next token and calculate likelihood
-def calculate_likelihoods(tokenized_poems, model, tokenizer):
-    console.print(Markdown("[bold green]Calculating token likelihoods...[/bold green]"))
+def tokenize(poem, tokenizer):
+    poem.tokens = tokenizer.encode(poem.text)
+
+def calculate_likelihoods(poem, model, tokenizer):
     model.eval()
-    likelihoods = []
-
+    poem.likelihoods = []
     with torch.no_grad():
-        for poem in track(tokenized_poems, description="Processing poems..."):
-            poem_likelihoods = []
-            for i in range(1, len(poem)):
-                context = poem[:i]
-                inputs = torch.tensor(context).unsqueeze(0)
-                outputs = model(inputs)
-                next_token_probs = torch.softmax(outputs.logits[0, -1], dim=-1)
-                correct_token_prob = next_token_probs[poem[i]].item()
-                poem_likelihoods.append(correct_token_prob)
-            likelihoods.append(poem_likelihoods)
+        for i in range(1, len(poem.tokens)):
+            context = poem.tokens[:i]
+            inputs = torch.tensor(context).unsqueeze(0)
+            outputs = model(inputs)
+            next_token_probs = torch.softmax(outputs.logits[0, -1], dim=-1)
+            correct_token_prob = next_token_probs[poem.tokens[i]].item()
+            poem.likelihoods.append(correct_token_prob)
 
-    return likelihoods
-
-# Step 4: Sort poems based on average correctness
-def sort_poems(poems, likelihoods):
-    avg_likelihoods = [sum(poem_likelihoods) / len(poem_likelihoods) for poem_likelihoods in likelihoods]
-    sorted_poems = sorted(zip(poems, avg_likelihoods), key=lambda x: x[1], reverse=True)
-    return sorted_poems
-
-def display_colored_tokens(token_texts, likelihoods):
-    for token_text, likelihood in zip(token_texts, likelihoods):
-        # Calculate color based on likelihood
+def display_colored_tokens(poem, tokenizer):
+    console.print(Markdown(f"## {poem.title} by {poem.author}"))
+    token_texts = [tokenizer.decode([token]) for token in poem.tokens]
+    for token_text, likelihood in zip(token_texts, poem.likelihoods):
         red = int((1 - likelihood) * 255)
         green = int(likelihood * 255)
         color = f"#{red:02x}{green:02x}00"
-        
-        # Create a Text object with the background color
         text = Text(token_text, style=f"on {color}")
         console.print(text, end='')
     console.print()  # Newline after printing all tokens
+
+def print_details(poem):
+    console.print(Markdown(f"## {poem.title} by {poem.author}"))
+    console.print(f"[blue]Text: {poem.text[:100]}...[/blue]")
+    if poem.likelihoods:
+        avg_likelihood = sum(poem.likelihoods) / len(poem.likelihoods)
+        console.print(f"[bold green]Average Likelihood: {avg_likelihood:.4f}[/bold green]")
 
 # Main function
 def main():
@@ -64,10 +60,8 @@ def main():
     console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
-    poems_with_attribution = loader.get_all_poems()  # List of (author, title, poem) tuples
-    poems = [poem for _, _, poem in poems_with_attribution]
-
-    poems = ["Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."]
+    poems_with_attribution = loader.get_random_poems(3)
+    poems = [Poem(author, title, " ".join(poem[:100].split())) for author, title, poem in poems_with_attribution]
 
     # Initialize tokenizer and model
     console.print(Markdown("# Initializing Tokenizer and Model"))
@@ -76,24 +70,23 @@ def main():
 
     # Tokenize poems
     console.print(Markdown("# Tokenizing Poems"))
-    tokenized_poems = tokenize_poems(poems, tokenizer)
+    for poem in poems:
+        tokenize(poem, tokenizer)
 
     # Calculate token likelihoods
     console.print(Markdown("# Calculating Token Likelihoods"))
-    likelihoods = calculate_likelihoods(tokenized_poems, model, tokenizer)
-    
-    for poem, poem_likelihoods in zip(tokenized_poems, likelihoods):
-        token_texts = [tokenizer.decode([token]) for token in poem]
-        display_colored_tokens(token_texts, poem_likelihoods)
+    for poem in poems:
+        calculate_likelihoods(poem, model, tokenizer)
+        display_colored_tokens(poem, tokenizer)
 
     # Sort poems based on average correctness
     console.print(Markdown("# Sorting"))
-    sorted_poems = sort_poems(poems, likelihoods)
+    sorted_poems = sorted(poems, key=lambda p: sum(p.likelihoods) / len(p.likelihoods), reverse=True)
 
     # Print sorted results
     console.print(Markdown("# Sorted Poems Based on Average Token Likelihood"))
-    for poem, avg_likelihood in sorted_poems:
-        console.print(f"[blue]Poem: {poem[:100]}...[/blue] - [bold green]Average Likelihood: {avg_likelihood:.4f}[/bold green]")
+    for poem in sorted_poems:
+        print_details(poem)
 
 if __name__ == "__main__":
     main()

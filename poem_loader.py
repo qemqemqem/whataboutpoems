@@ -17,7 +17,7 @@ class PoemLoader:
             self.poems = [poem for poem in self.poems if poem['poem'].strip()]
 
     def get_random_poems(self, count: int = 2) -> List[Dict[str, Any]]:
-        return random.sample(self.poems, count)
+        return [(poem['author'], poem['title'], poem['poem']) for poem in random.sample(self.poems, count)]
 
     def get_all_poems(self) -> List[Tuple[str, str, str]]:
         return [(poem['author'], poem['title'], poem['poem']) for poem in self.poems]
