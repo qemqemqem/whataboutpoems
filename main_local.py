@@ -2,7 +2,7 @@ from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 import torch
 import rich
 from rich.progress import track
@@ -34,7 +34,7 @@ def calculate_likelihoods(poem, model, tokenizer):
             outputs = model(inputs)
             next_token_probs = torch.softmax(outputs.logits[0, -1], dim=-1)
             correct_token_prob = next_token_probs[poem.tokens[i]].item()
-            console.print(f"Computing Likelihood. Context: {context}, Next Token: {tokenizer.decode([poem.tokens[i]])}, Probability: {correct_token_prob}")
+            # console.print(f"Computing Likelihood. Context: {context}, Next Token: {tokenizer.decode([poem.tokens[i]])}, Probability: {correct_token_prob}")
             poem.likelihoods.append(correct_token_prob)
 
 def display_colored_tokens(poem, tokenizer):
@@ -61,15 +61,15 @@ def main():
     # console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
-    poems_with_attribution = loader.get_random_poems(1)
-    poems = [Poem(author, title, " ".join(poem[:300].split())) for author, title, poem in poems_with_attribution]
+    poems_with_attribution = loader.get_random_poems(3)
+    poems = [Poem(author, title, " ".join(poem[:100].split())) for author, title, poem in poems_with_attribution]
     poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
     poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
 
     # Initialize tokenizer and model
     # console.print(Markdown("# Initializing Tokenizer and Model"))
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    tokenizer = GPT2Tokenizer.from_pretrained('EleutherAI/gpt-neo-2.7B')
+    model = GPTNeoForCausalLM.from_pretrained('EleutherAI/gpt-neo-2.7B')
 
     # Tokenize poems
     # console.print(Markdown("# Tokenizing Poems"))
@@ -79,6 +79,7 @@ def main():
     # Calculate token likelihoods
     console.print(Markdown("# Calculating Token Likelihoods"))
     for poem in poems:
+        console.print(f"Calculating likelihood of [blue]{poem.title}[/] by [blue]{poem.author}[/]...")
         calculate_likelihoods(poem, model, tokenizer)
         display_colored_tokens(poem, tokenizer)
 
@@ -90,6 +91,10 @@ def main():
     console.print(Markdown("# Sorted Poems Based on Average Token Likelihood"))
     for poem in sorted_poems:
         print_details(poem, tokenizer)
+
+    console.print(Markdown("# Just the Token Probs, in Order"))
+    for poem in sorted_poems:
+        display_colored_tokens(poem, tokenizer)
 
 if __name__ == "__main__":
     main()
