@@ -9,6 +9,7 @@ import rich
 from rich.progress import track
 from rich.markdown import Markdown
 from rich.text import Text
+from rich.style import Style
 
 from poem_loader import PoemLoader
 
@@ -43,12 +44,12 @@ def calculate_likelihoods(poem, model, tokenizer):
             poem.likelihoods.append(correct_token_prob)
 
 def display_colored_tokens(poem, tokenizer):
-    token_texts = [tokenizer.decode([token]) for token in poem.tokens]
+    token_texts = [tokenizer.decode([token], clean_up_tokenization_spaces=True) for token in poem.tokens]
     for token_text, likelihood in zip(token_texts, poem.likelihoods):
         red = int((1 - likelihood) * 255)
         green = int(likelihood * 255)
         color = f"#{red:02x}{green:02x}00"
-        text = Text(token_text, style=f"black on {color}")  # Set text color to black
+        text = Text(token_text, style=Style(bgcolor=color, color="black"))
         console.print(text, end='')
     console.print()  # Newline after printing all tokens
 
