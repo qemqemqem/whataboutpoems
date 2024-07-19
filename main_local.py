@@ -37,7 +37,6 @@ def calculate_likelihoods(poem, model, tokenizer):
             poem.likelihoods.append(correct_token_prob)
 
 def display_colored_tokens(poem, tokenizer):
-    console.print(Markdown(f"## {poem.title} by {poem.author}"))
     token_texts = [tokenizer.decode([token]) for token in poem.tokens]
     for token_text, likelihood in zip(token_texts, poem.likelihoods):
         red = int((1 - likelihood) * 255)
@@ -49,7 +48,7 @@ def display_colored_tokens(poem, tokenizer):
 
 def print_details(poem, tokenizer):
     console.print(Markdown(f"## {poem.title} by {poem.author}"))
-    console.print(f"[blue]Text: {poem.text[:100]}...[/blue]")
+    console.print(f"[blue]{poem.text}[/blue]")
     display_colored_tokens(poem, tokenizer)
     if poem.likelihoods:
         avg_likelihood = sum(poem.likelihoods) / len(poem.likelihoods)
@@ -82,7 +81,7 @@ def main():
 
     # Sort poems based on average correctness
     console.print(Markdown("# Sorting"))
-    sorted_poems = sorted(poems, key=lambda p: sum(p.likelihoods) / len(p.likelihoods), reverse=True)
+    sorted_poems = sorted(poems, key=lambda p: sum(p.likelihoods) / len(p.likelihoods), reverse=False)
 
     # Print sorted results
     console.print(Markdown("# Sorted Poems Based on Average Token Likelihood"))
