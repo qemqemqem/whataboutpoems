@@ -65,14 +65,14 @@ def print_details(poem, tokenizer):
 def main():
     parser = argparse.ArgumentParser(description="Choose between GPT-2 and GPT-Neo models.")
     parser.add_argument('--model', choices=['gpt2', 'gpt-neo'], default='gpt2', help="Model to use")
-    parser.add_argument('--num_poems', type=int, default=8, help="Number of poems to process")  # Added argument
+    parser.add_argument('--num_texts', type=int, default=8, help="Number of texts to process")
     args = parser.parse_args()
 
     # Download poems
     # console.print(Markdown("# Downloading Poems"))
     filepath = Path("poems.jsonl")
     loader = PoemLoader(filepath)
-    poems_with_attribution = loader.get_random_poems(args.num_poems)  # Use the argument here
+    poems_with_attribution = loader.get_random_poems(args.num_texts)  # Use the argument here
     poems = [Poem(author, title, " ".join(poem[:150].split())) for author, title, poem in poems_with_attribution]
     poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
     poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
