@@ -76,6 +76,9 @@ def main():
     poems.append(Poem("Gabriel Garcia Marquez", "One Hundred Years of Solitude", "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice."))
     poems.append(Poem("Shakespeare", "To Be or Not to Be", "To be, or not to be, that is the question: Whether 'tis nobler in the mind to suffer The slings and arrows of outrageous fortune, Or to take arms against a sea of troubles"))
 
+    for poem in poems:
+        poem.text = "Complete the following well-known text: " + poem.text
+
     # Initialize tokenizer and model
     # console.print(Markdown("# Initializing Tokenizer and Model"))
     if args.model == 'gpt2':
