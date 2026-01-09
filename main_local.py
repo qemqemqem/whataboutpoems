@@ -46,7 +46,7 @@ def calculate_likelihoods(poem, model, tokenizer):
 def display_colored_tokens(poem, tokenizer):
     token_texts = [tokenizer.decode([token], clean_up_tokenization_spaces=True) for token in poem.tokens]
     for token_text, likelihood in zip(token_texts, poem.likelihoods):
-        red = int((1 - likelihood) * 255)
+        red = int((1 - likelihood) * 0)
         green = int(likelihood * 255)
         color = f"#{red:02x}{green:02x}00"
         text = Text(token_text, style=Style(bgcolor=color, color="black"))
